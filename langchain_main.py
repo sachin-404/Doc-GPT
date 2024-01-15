@@ -14,7 +14,7 @@ from langchain.chains import LLMChain
 load_dotenv()
 GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
 
-llm = ChatGoogleGenerativeAI(model="gemini-pro", temperature=0.6)
+llm = ChatGoogleGenerativeAI(model="gemini-pro")
 
 search = DuckDuckGoSearchRun()
 
@@ -117,14 +117,14 @@ agent = LLMSingleActionAgent(
     allowed_tools=tool_names
 )
 
-memory=ConversationBufferWindowMemory(k=2)
+memory=ConversationBufferWindowMemory(k=5)
 
 agent_executor = AgentExecutor.from_agent_and_tools(
     agent=agent,
     tools=tools,
-    verbose=True,
+    # verbose=True,
     memory=memory
 )
 
 
-agent_executor.invoke("how can I treat cut wound?")
+# agent_executor.invoke("how can I treat cut wound?")
