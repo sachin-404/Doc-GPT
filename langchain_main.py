@@ -1,7 +1,6 @@
-import os
+import streamlit as st
 from typing import List, Union
 import re
-from dotenv import load_dotenv
 
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_community.tools import DuckDuckGoSearchRun
@@ -11,9 +10,7 @@ from langchain.schema import AgentAction, AgentFinish
 from langchain.memory import ConversationBufferWindowMemory
 from langchain.chains import LLMChain
 
-load_dotenv()
-GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
-
+GOOGLE_API_KEY = st.secrets["GOOGLE_API_KEY"]
 llm = ChatGoogleGenerativeAI(model="gemini-pro")
 
 search = DuckDuckGoSearchRun()
@@ -25,6 +22,9 @@ def duck_wrapper(input_text):
     search_results = search.run(f"site:medicinenet.com {input_text}")
     return search_results
 
+def general_convo(input_text):
+    return llm.invoke(input_text)
+
 tools = [
     Tool (
         name="Search medicinenet",
@@ -33,13 +33,21 @@ tools = [
     )
 ]
 
-# tools = [
-#     Tool(
-#         name="Search",
-#         func=search.run,
-#         description="useful for when you need answers for current events"
-#     )
-# ]
+tools = [
+    Tool(
+        name="General",
+        func=search.run,
+        description="useful for when you need answers for current events"
+    )
+]
+
+tools = [
+    Tool(
+        name="Casual Conversation",
+        func=general_convo,
+        description="useful for when you need answers for questions related to general conversations"
+    )
+]
 
 # Set up the base template
 template = """Answer the following questions as best you can, but speaking as compasionate medical professional. You have access to the following tools:
@@ -57,7 +65,7 @@ Observation: the result of the action
 Thought: I now know the final answer
 Final Answer: the final answer to the original input question
 
-Begin! Remember to speak as a compasionate medical professional when giving your final answer. If the condition is serious advise they speak to a doctor.
+Begin! Remember to speak as a compasionate medical professional when giving your final answer. If the input is general conversation related, greet or answer how a medical professional would respond. If the condition is serious advise they speak to a doctor.
 
 Previous conversation history:
 {history}
