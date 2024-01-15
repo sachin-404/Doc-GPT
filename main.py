@@ -1,7 +1,7 @@
 from langchain_main import agent_executor
 import streamlit as st
 
-st.set_page_config(page_title="🩺 DocGPT")
+st.set_page_config(page_title="DocGPT")
 
 with st.sidebar:
     st.title('🩺 &nbsp; DocGPT')
