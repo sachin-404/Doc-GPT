@@ -3,7 +3,8 @@ from langchain_community.tools import DuckDuckGoSearchRun
 from langchain.agents import Tool, AgentOutputParser, LLMSingleActionAgent, AgentExecutor
 from langchain.prompts import StringPromptTemplate
 from langchain.schema import AgentAction, AgentFinish
-from langchain import LLMChain
+from langchain.memory import ConversationBufferWindowMemory
+from langchain.chains import LLMChain
 
 from typing import List, Union
 import re
@@ -111,9 +112,12 @@ Observation: the result of the action
 Thought: I now know the final answer
 Final Answer: the final answer to the original input question
 
-Begin! Remember to answer as a compansionate medical professional when giving your final answer.
+Begin! Remember to speak as a compasionate medical professional when giving your final answer. If the condition is serious advise they speak to a doctor.
 
-Question: {input}
+Previous conversation history:
+{history}
+
+New question: {input}
 {agent_scratchpad}"""
 
 #set up a prompt template
@@ -144,7 +148,7 @@ prompt = CustomPromptTemplate(
     tools=tools,
     # This omits the `agent_scratchpad`, `tools`, and `tool_names` variables because those are generated dynamically
     # This includes the `intermediate_steps` variable because that is needed
-    input_variables=["input", "intermediate_steps"]
+    input_variables=["input", "intermediate_steps", "history"]
 )
 
 class CustomOutputParser(AgentOutputParser):
@@ -173,7 +177,6 @@ output_parser = CustomOutputParser()
 llm_chain = LLMChain(llm=llm, prompt=prompt)
 
 tool_names = [tool.name for tool in tools]
-
 agent = LLMSingleActionAgent(
     llm_chain=llm_chain,
     output_parser=output_parser,
@@ -181,7 +184,14 @@ agent = LLMSingleActionAgent(
     allowed_tools=tool_names
 )
 
-agent_executor = AgentExecutor.from_agent_and_tools(agent=agent, tools=tools, verbose=True)
+memory=ConversationBufferWindowMemory(k=2)
 
-res = agent_executor.run("how can I treat cut wound?")
-print(res)
+agent_executor = AgentExecutor.from_agent_and_tools(
+    agent=agent,
+    tools=tools,
+    verbose=True,
+    memory=memory
+)
+
+
+agent_executor.invoke("how can I treat cut wound?")
