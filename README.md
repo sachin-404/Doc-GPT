@@ -2,6 +2,6 @@
 
 **A friendly AI enabled virtual companion offering medical insights and guidance.**
 
-**Demo**
+## Demo
 
 ![Demo](media/demo.png)
